@@ -12,7 +12,7 @@ class States(Base):
 	__tablename__ = 'states'
 	id = Column(Integer, primary_key=True)
 	name = Column(String)
-	year = Column(Date)
+	year = Column(String)
 	race_total = Column(Float)
 	religion_total = Column(Float)
 	sex_total = Column(Float)
@@ -24,6 +24,8 @@ class Locations(Base):
 	__tablename__ = 'locations'
 	id = Column(Integer, primary_key=True)
 	states_id = Column(Integer, ForeignKey('states.id'))
+	agency_type = Column(String)
+	name = Column(String)
 	race_count = Column(Float)
 	religion_count = Column(Float)
 	sex_count = Column(Float)
@@ -33,5 +35,7 @@ class Locations(Base):
 	second_count = Column(Float)
 	third_count = Column(Float)
 	fourth_count = Column(Float)
+	population = Column(Float)
+	total = Column(Float)
 
 Base.metadata.create_all(engine)
