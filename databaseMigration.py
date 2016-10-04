@@ -3,6 +3,8 @@ from createDatabase import Session, States, Locations
 from datetime import date
 import re
 
+STATES = ['ALABAMA', 'ALASKA', 'ARIZONA', 'ARKANSAS', 'CALIFORNIA', 'COLORADO', 'CONNECTICUT', 'DELAWARE', 'DISTRICT OF COLUMBIA', 'FLORIDA', 'GEORGIA', 'IDAHO', 'ILLINOIS', 'INDIANA', 'IOWA', 'KANSAS', 'KENTUCKY', 'LOUISIANA', 'MAINE', 'MARYLAND', 'MASSACHUSETTS', 'MICHIGAN', 'MINNESOTA', 'MISSISSIPPI', 'MISSOURI', 'MONTANA', 'NEBRASKA', 'NEVADA', 'NEW HAMPSHIRE', 'NEW JERSEY', 'NEW MEXICO', 'NEW YORK', 'NORTH CAROLINA', 'NORTH DAKOTA', 'OHIO', 'OKLAHOMA', 'OREGON', 'PENNSYLVANIA', 'RHODE ISLAND', 'SOUTH CAROLINA', 'SOUTH DAKOTA', 'TENNESSEE', 'TEXAS', 'UTAH', 'VERMONT', 'VIRGINIA', 'WASHINGTON', 'WEST VIRGINIA', 'WISCONSIN', 'WYOMING']
+
 def get_indicies(location_records):
 	# get rid of header notes and footnotes 
 	front_idx = 0
@@ -94,7 +96,9 @@ def get_zero_locations(file_name):
 		location_record[1] = region
 		location_record[2] = location
 		location_record[12] = population
-		zero_location_records.append(location_record)
+
+		if state != "Other Outlying Areas".upper():
+			zero_location_records.append(location_record)
 	
 	front_idx, back_idx = get_indicies(zero_location_records)
 	# add one since there is two 'STATE' rows
@@ -103,10 +107,18 @@ def get_zero_locations(file_name):
 
 	return zero_location_records
 
-def insert_state_totals_into_database(state_totals):
+def insert_state_totals_into_database(state_totals, current_year):
 	session = Session()
+
+	if len(STATES) != len(state_totals):
+
+		differences = set(STATES) - set([name[0] for name in state_totals])
+		print(differences)
+		for difference in differences:
+			state_totals.append([difference.upper(), current_year, 0, 0, 0, 0, 0, 0])
 	
 	for entry in state_totals:
+		assert(entry[1] == current_year)
 		new_record = States(name = entry[0], year = entry[1], race_total = entry[2], religion_total = entry[3], sex_total = entry[4], ethnicity_total = entry[5], disability_total = entry[6], population = 1000)
 		session.add(new_record)
 	session.commit()

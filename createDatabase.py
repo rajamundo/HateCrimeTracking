@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import sessionmaker
 
 
+
 engine = create_engine("sqlite:///hatecrimes.db", echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
@@ -38,4 +39,6 @@ class Locations(Base):
 	population = Column(Float)
 	total = Column(Float)
 
-Base.metadata.create_all(engine)
+def build_database():
+
+	Base.metadata.create_all(engine)
