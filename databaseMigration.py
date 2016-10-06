@@ -2,6 +2,7 @@ import pyexcel as pe
 from createDatabase import Session, States, Locations
 from datetime import date
 import re
+import os
 
 STATES = ['ALABAMA', 'ALASKA', 'ARIZONA', 'ARKANSAS', 'CALIFORNIA', 'COLORADO', 'CONNECTICUT', 'DELAWARE', 'DISTRICT OF COLUMBIA', 'FLORIDA', 'GEORGIA', 'IDAHO', 'ILLINOIS', 'INDIANA', 'IOWA', 'KANSAS', 'KENTUCKY', 'LOUISIANA', 'MAINE', 'MARYLAND', 'MASSACHUSETTS', 'MICHIGAN', 'MINNESOTA', 'MISSISSIPPI', 'MISSOURI', 'MONTANA', 'NEBRASKA', 'NEVADA', 'NEW HAMPSHIRE', 'NEW JERSEY', 'NEW MEXICO', 'NEW YORK', 'NORTH CAROLINA', 'NORTH DAKOTA', 'OHIO', 'OKLAHOMA', 'OREGON', 'PENNSYLVANIA', 'RHODE ISLAND', 'SOUTH CAROLINA', 'SOUTH DAKOTA', 'TENNESSEE', 'TEXAS', 'UTAH', 'VERMONT', 'VIRGINIA', 'WASHINGTON', 'WEST VIRGINIA', 'WISCONSIN', 'WYOMING']
 
@@ -107,19 +108,49 @@ def get_zero_locations(file_name):
 
 	return zero_location_records
 
-def insert_state_totals_into_database(state_totals, current_year):
+def get_state_populations():
+
+	file_name = "NST_EST2014_ALLDATA.csv"
+	main_folder = os.getcwd() + "/"
+	sheet = pe.get_sheet(file_name=main_folder + file_name)
+	years = [2010, 2011, 2012, 2013, 2014]
+	headers = sheet.row[0]
+
+	states = sheet.column[4]
+	first_state_idx = states.index("Alabama")
+	last_state_idx = states.index("Wyoming")
+	hawaii_index = states.index('Hawaii')
+	states.remove('Hawaii')
+	states = states[first_state_idx:last_state_idx]
+	state_populations = {}
+
+	for year in years:
+		column_name = "POPESTIMATE"
+		population_nums = sheet.column[(headers.index(column_name + str(year)))]
+		del population_nums[hawaii_index]
+		population_nums = population_nums[first_state_idx:last_state_idx]
+		
+		state_populations[year] = {}
+
+		for idx, state in enumerate(states):
+
+		 	state_populations[year][state.upper()] = population_nums[idx]
+
+	return state_populations
+
+def insert_state_totals_into_database(state_totals, current_year, state_populations):
 	session = Session()
 
 	if len(STATES) != len(state_totals):
 
 		differences = set(STATES) - set([name[0] for name in state_totals])
-		print(differences)
 		for difference in differences:
 			state_totals.append([difference.upper(), current_year, 0, 0, 0, 0, 0, 0])
 	
 	for entry in state_totals:
 		assert(entry[1] == current_year)
-		new_record = States(name = entry[0], year = entry[1], race_total = entry[2], religion_total = entry[3], sex_total = entry[4], ethnicity_total = entry[5], disability_total = entry[6], population = 1000)
+		population = state_populations[int(current_year)][entry[0]]
+		new_record = States(name = entry[0], year = entry[1], race_total = entry[2], religion_total = entry[3], sex_total = entry[4], ethnicity_total = entry[5], disability_total = entry[6], population = population)
 		session.add(new_record)
 	session.commit()
 
@@ -141,16 +172,9 @@ def insert_location_records_into_database(location_records, current_year):
 	session.commit()
 
 if __name__ == "__main__":
-	file_name = "Data/Table_13_Hate_Crime_Incidents_per_Bias_Motivation_and_Quarter_by_State_and_Agency_2010.xls"
-	file_name_2 = "Data/Table_14_Hate_Crime_Zero_Data_Submitted_per_Quarter_by_State_and_Agency_2010.xls"
-	zero_records = get_zero_locations(file_name = file_name_2)
-	state_totals, location_records = parse_records(file_name = file_name)
-	print(location_records)
-	#insert_state_totals_into_database(state_totals)
-	#insert_location_records_into_database(location_records + zero_records, "2011")
-	#get_zero_locations(file_name = file_name)
-	#record = [["test", date.today(), 0, 0, 0, 0, 0, 0]]
-	#insert_into_database(record, record)
+
+	get_state_populations()
+
 
 
 # the counties and other agencies don't have a population total, which is rather confusing 
