@@ -33,26 +33,10 @@ class States(Base):
 	total_per_cap = Column(Float)
 
 	def __repr__(self):
-		# return '''<User(name = '%s', year = '%s', race_total = '%d',
-		# 	religion_total = '%d', sex_total = '%d', ethnicity_total = '%d',
-		# 	disability_total = '%d', gender_total = '%d', gender_identity_total = '%d',
-		# 	total = '%d', population = '%d',
-		# 	race_per_cap = '%f', ethnicity_per_cap = '%f', sex_per_cap = '%f', 
-		# 	ethnicity_per_cap = '%f', disability_per_cap = '%f', total_per_cap = '%f')>''' % (self.name, self.year, 
-		# 	self.race_total, self.religion_total, self.sex_total, self.ethnicity_total, 
-		# 	self.disability_total, self.gender_total, self.gender_identity_total, self.total, self.population, self.race_per_cap,
-		# 	self.religion_per_cap, self.sex_per_cap, self.ethnicity_per_cap, self.disability_per_cap, self.total_per_cap)
 
 		return str(self.__dict__)
 
 	def __eq__(self, other):
-		# return ((self.name == other.name) and (self.year == other.year) and (self.race_total == other.race_total)
-		# 	and (self.religion_total == other.religion_total) and (self.sex_total == other.sex_total)
-		# 	and (self.ethnicity_total == other.ethnicity_total) and (self.disability_total == other.disability_total) and (self.total == other.total)
-		# 	and (self.population == other.population) and (self.race_per_cap == other.race_per_cap)
-		# 	and (self.religion_per_cap == other.religion_per_cap) and (self.sex_per_cap == other.sex_per_cap)
-		# 	and (self.ethnicity_per_cap == other.ethnicity_per_cap) and (self.disability_per_cap == other.disability_per_cap)
-		# 	and (self.total_per_cap == other.total_per_cap))
 
 		self_dict = self.__dict__
 		other_dict = other.__dict__
