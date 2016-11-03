@@ -202,7 +202,7 @@ def insert_location_records_into_database(location_records, current_year):
 			for state_entry in session.query(States).filter(States.name == current_state).filter(States.year == current_year):
 				state_id = state_entry.id
 		
-		new_record = generate_location(state_id, location, per_caps)
+		new_record = generate_location(state_id, location)
 
 		session.add(new_record)
 	session.commit()

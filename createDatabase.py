@@ -81,6 +81,27 @@ class Locations(Base):
 	gender_identity_per_cap = Column(Float)
 	total_per_cap = Column(Float)
 
+	def __repr__(self):
+
+		return str(self.__dict__)
+
+
+	def __eq__(self, other):
+
+		self_dict = self.__dict__
+		other_dict = other.__dict__
+		
+		# the test record doesnt have an id
+		if "id" in self_dict:
+			del self_dict["id"]
+		else:
+			del other_dict["id"]
+
+		del self_dict["_sa_instance_state"]	
+		del other_dict["_sa_instance_state"]
+
+		return self_dict == other_dict
+
 def build_database():
 
 	Base.metadata.create_all(engine)

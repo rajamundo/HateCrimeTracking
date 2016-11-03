@@ -49,10 +49,26 @@ def states_insertion_test():
 			print(record)
 			print(db_entry)
 
+def locations_insertion_test():
+
+	session = Session()
+	state_id = session.query(States).filter(States.name == "MAINE").filter(States.year == "2014").one().id
+	old_orchard_2014_counts = ["MAINE", "Cities", "Old Orchard Beach", float(2), float(0), float(1), float(0), float(0),
+	 float(0), float(0), float(0), float(1), float(2), float(0), float(8705)]
+	old_orchard_2014_counts.append(sum(old_orchard_2014_counts[3:10]))
+
+	old_orchard_2014_record = generate_location(state_id, old_orchard_2014_counts)
+	old_orchard_2014_db_entry = session.query(Locations).filter(Locations.name == "Old Orchard Beach").filter(Locations.states_id == state_id).one()
+
+	print(old_orchard_2014_record)
+	print(old_orchard_2014_db_entry)
+
+	assert(old_orchard_2014_record == old_orchard_2014_db_entry)
 
 def run_tests():
 
 	states_insertion_test()
+	locations_insertion_test()
 
 
 if __name__ == "__main__":

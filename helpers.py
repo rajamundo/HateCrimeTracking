@@ -16,7 +16,7 @@ def generate_state(totals, pop):
 
 	return new_record
 
-def generate_location(state_id, location, per_caps):
+def generate_location(state_id, location):
 
 	# location[15] is total and location[14] is pop
 	totals = location[3:10] +[location[15]]
