@@ -5,11 +5,32 @@ from datetime import date
 import re
 import os
 import decimal
+from collections import namedtuple
+from variables import STATES, ABBREVIATIONS
 
-STATES = ['ALABAMA', 'ALASKA', 'ARIZONA', 'ARKANSAS', 'CALIFORNIA', 'COLORADO', 'CONNECTICUT', 'DELAWARE', 'DISTRICT OF COLUMBIA', 'FLORIDA', 'GEORGIA', 'IDAHO', 'ILLINOIS', 'INDIANA', 'IOWA', 'KANSAS', 'KENTUCKY', 'LOUISIANA', 'MAINE', 'MARYLAND', 'MASSACHUSETTS', 'MICHIGAN', 'MINNESOTA', 'MISSISSIPPI', 'MISSOURI', 'MONTANA', 'NEBRASKA', 'NEVADA', 'NEW HAMPSHIRE', 'NEW JERSEY', 'NEW MEXICO', 'NEW YORK', 'NORTH CAROLINA', 'NORTH DAKOTA', 'OHIO', 'OKLAHOMA', 'OREGON', 'PENNSYLVANIA', 'RHODE ISLAND', 'SOUTH CAROLINA', 'SOUTH DAKOTA', 'TENNESSEE', 'TEXAS', 'UTAH', 'VERMONT', 'VIRGINIA', 'WASHINGTON', 'WEST VIRGINIA', 'WISCONSIN', 'WYOMING']
+City = namedtuple("City", ["city_name", "state"])
+
+def parse_lat_long(file_name):
+
+	sheet = pe.get_sheet(file_name = file_name)
+	coordinates = {}
+	del sheet.row[0]
+	for row in sheet:
+		latitude, longitude, city, state = row[1], row[2], row[3].upper(), row[4]
+		if latitude and longitude:
+			try:
+				# try and get the state name from the abbreviation
+				state_full_name = ABBREVIATIONS[state].upper()
+			except:
+				state_full_name = state
+			curr_city = City(city_name = city, state = state_full_name)
+			if curr_city not in coordinates:
+				coordinates[curr_city] = [latitude, longitude]
+	print(coordinates[City(city_name = "OLD ORCHARD BEACH", state = "MAINE")])
+	return coordinates
 
 def get_indicies(location_records):
-	# get rid of header notes and footnotes 
+	# get rid of header notes and footnotes
 	front_idx = 0
 	for x in location_records:
 		front_idx += 1
@@ -23,7 +44,7 @@ def get_indicies(location_records):
 			break
 		back_idx -= 1
 
-	return front_idx, back_idx	
+	return front_idx, back_idx
 
 def get_state_record(sheet, idx, state, year):
 
@@ -39,7 +60,24 @@ def get_state_record(sheet, idx, state, year):
 
 	return nums
 
-def get_location_record(sheet, idx, state, year, region):
+def get_coordinates(location, state, location_crimes, coordinates):
+
+	try:
+		# add the longitude and latitude
+		location_crimes = location_crimes + coordinates[City(city_name = location.upper(), state = state)]
+
+	except:
+		if location and location[-1].isdigit():
+			location = location[:-1]
+			try:
+				location_crimes = location_crimes + coordinates[City(city_name = location.upper(), state = state)]
+			except:
+				pass
+		location_crimes = location_crimes + [0, 0]
+
+	return location_crimes
+
+def get_location_record(sheet, idx, state, year, region, coordinates):
 
 	location_crimes = []
 	location_crimes.append(state)
@@ -65,6 +103,8 @@ def get_location_record(sheet, idx, state, year, region):
 	location_crimes = location_crimes + nums
 	location_crimes.append(location_total)
 
+	location_crimes = get_coordinates(location, state, location_crimes, coordinates)
+
 	return location_crimes
 
 
@@ -73,6 +113,7 @@ def parse_records(file_name):
 	sheet = pe.get_sheet(file_name = file_name)
 	year = ''.join([letter for letter in file_name if letter.isdigit()][2:])
 	total_column = (sheet.column[1])
+	coordinates = parse_lat_long("zip_codes_states.csv")
 	# state name, race, religion, sex orientation, ethnicity, disability
 	state_totals = []
 	location_records = []
@@ -92,22 +133,22 @@ def parse_records(file_name):
 			# if the field is not null (aka cities, metro counties, universities)
 			region = row
 		else:
-			location_crimes = get_location_record(sheet, idx, state, year, region)
-			
+			location_crimes = get_location_record(sheet, idx, state, year, region, coordinates)
+
 			# only adds records that have a population and are the correct size, gets rid of header and footer
 			try:
 				if location_crimes[14] > 0:
 					location_records.append(location_crimes)
 			except:
 				continue
-
 	return state_totals, location_records
 
 def get_zero_locations(file_name):
 	sheet = pe.get_sheet(file_name = file_name)
 	agency_column = (sheet.column[1])
+	coordinates = parse_lat_long("zip_codes_states.csv")
 
-	state = None 
+	state = None
 	region = None
 	zero_location_records = []
 
@@ -128,15 +169,17 @@ def get_zero_locations(file_name):
 			population = 0
 		else:
 			population = float(population)
-	
+
 		location_record[0] = state
 		location_record[1] = region
 		location_record[2] = location
 		location_record[14] = population
+		location_record = get_coordinates(location, state, location_record, coordinates)
+
 
 		if pop_exists:
 			zero_location_records.append(location_record)
-	
+
 	return zero_location_records
 
 def get_state_populations():
@@ -160,7 +203,7 @@ def get_state_populations():
 		population_nums = sheet.column[(headers.index(column_name + str(year)))]
 		del population_nums[hawaii_index]
 		population_nums = population_nums[first_state_idx:last_state_idx]
-		
+
 		state_populations[year] = {}
 
 		for idx, state in enumerate(states):
@@ -180,11 +223,11 @@ def insert_state_totals_into_database(state_totals, current_year, state_populati
 		differences = set(STATES) - set([name[0] for name in state_totals])
 		for difference in differences:
 			state_totals.append([difference.upper(), current_year, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-	
+
 	for entry in state_totals:
 		assert(entry[1] == current_year)
 		population = state_populations[int(current_year)][entry[0]]
-		
+
 		new_record = generate_state(entry, population)
 		session.add(new_record)
 	session.commit()
@@ -201,7 +244,7 @@ def insert_location_records_into_database(location_records, current_year):
 			current_state = state
 			for state_entry in session.query(States).filter(States.name == current_state).filter(States.year == current_year):
 				state_id = state_entry.id
-		
+
 		new_record = generate_location(state_id, location)
 
 		session.add(new_record)
@@ -212,8 +255,9 @@ def insert_location_records_into_database(location_records, current_year):
 
 if __name__ == "__main__":
 
-	parse_records()
-
+	#data_folder = os.getcwd() + "/Data/"
+	#parse_records(file_name = data_folder+"Table_13_Hate_Crime_Incidents_per_Bias_Motivation_and_Quarter_by_State_and_Agency_2011.xls")
+	parse_lat_long("zip_codes_states.csv")
 
 
 

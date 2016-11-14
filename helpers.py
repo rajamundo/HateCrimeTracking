@@ -22,7 +22,6 @@ def generate_location(state_id, location):
 	totals = location[3:10] +[location[15]]
 
 	per_caps = [float(total/location[14]) for total in totals]
-
 	new_record = Locations(states_id = state_id, agency_type = location[1], name = location[2], 
 		race_count = location[3], religion_count = location[4], sex_count = location[5], 
 		ethnicity_count = location[6], disability_count = location[7], gender_count = location[8],
@@ -30,6 +29,7 @@ def generate_location(state_id, location):
 		third_count = location[12], fourth_count = location[13], population = location[14], total = location[15],
 		race_per_cap = per_caps[0], religion_per_cap = per_caps[1], sex_per_cap = per_caps[2],
 		ethnicity_per_cap = per_caps[3], disability_per_cap = per_caps[4], gender_per_cap = per_caps[5],
-		gender_identity_per_cap = per_caps[6], total_per_cap = per_caps[7])
+		gender_identity_per_cap = per_caps[6], total_per_cap = per_caps[7], latitude = location[16], longitude = location[17])
+
 
 	return new_record

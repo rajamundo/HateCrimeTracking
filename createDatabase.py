@@ -80,6 +80,8 @@ class Locations(Base):
 	gender_per_cap = Column(Float)
 	gender_identity_per_cap = Column(Float)
 	total_per_cap = Column(Float)
+	latitude = Column(Float)
+	longitude = Column(Float)
 
 	def __repr__(self):
 

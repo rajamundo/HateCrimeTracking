@@ -3,7 +3,7 @@ from helpers import generate_state, generate_location
 
 
 def states_insertion_test():
-	
+
 	session = Session()
 
 	alabama_2011_counts = ["ALABAMA", "2011", float(58), float(5), float(7), float(11), float(2), float(-1), float(-1)]
@@ -12,7 +12,7 @@ def states_insertion_test():
 
 	alabama_2011_record = generate_state(alabama_2011_counts, alabama_2011_pop)
 	alabama_2011_db_entry = session.query(States).filter(States.name == "ALABAMA").filter(States.year == "2011").one()
-	
+
 #***********************************************************************************#
 
 
@@ -29,12 +29,12 @@ def states_insertion_test():
 	connecticut_2014_pop = float(3596677)
 	connecticut_2014_counts.append(sum(connecticut_2014_counts[2:9]))
 
-	connecticut_2014_record = generate_state(connecticut_2014_counts, connecticut_2014_pop)	
+	connecticut_2014_record = generate_state(connecticut_2014_counts, connecticut_2014_pop)
 	connecticut_2014_db_entry = session.query(States).filter(States.name == "CONNECTICUT").filter(States.year == "2014").one()
 
 #***********************************************************************************#
 
-	comparisons = [[alabama_2011_record, alabama_2011_db_entry], [new_york_2013_record, new_york_2013_db_entry], 
+	comparisons = [[alabama_2011_record, alabama_2011_db_entry], [new_york_2013_record, new_york_2013_db_entry],
 	[connecticut_2014_record, connecticut_2014_db_entry]]
 
 	for record, db_entry in comparisons:
@@ -56,7 +56,9 @@ def locations_insertion_test():
 	old_orchard_2014_counts = ["MAINE", "Cities", "Old Orchard Beach", float(2), float(0), float(1), float(0), float(0),
 	 float(0), float(0), float(0), float(1), float(2), float(0), float(8705)]
 	old_orchard_2014_counts.append(sum(old_orchard_2014_counts[3:10]))
-
+	old_orchard_lat = 43.411837
+	old_orchard_long = -70.469526
+	old_orchard_2014_counts.extend([old_orchard_lat, old_orchard_long])
 	old_orchard_2014_record = generate_location(state_id, old_orchard_2014_counts)
 	old_orchard_2014_db_entry = session.query(Locations).filter(Locations.name == "Old Orchard Beach").filter(Locations.states_id == state_id).one()
 
